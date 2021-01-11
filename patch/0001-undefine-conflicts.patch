@@ -1,0 +1,27 @@
+From a1e94b33755ba25d2c12d5c7b58e8e067777ec64 Mon Sep 17 00:00:00 2001
+From: John Wass <wassj@ctc.com>
+Date: Sat, 9 Nov 2019 11:59:35 -0500
+Subject: [PATCH] undefine conflicts
+
+---
+ src/TMCStepper.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/TMCStepper.h b/src/TMCStepper.h
+index 33571a8..909b8dd 100644
+--- a/src/TMCStepper.h
++++ b/src/TMCStepper.h
+@@ -13,6 +13,10 @@
+ #include <Stream.h>
+ #include <SPI.h>
+ 
++#undef A1
++#undef D1
++#undef V1
++
+ #if (__cplusplus == 201703L) && defined(__has_include)
+ 	#define SW_CAPABLE_PLATFORM __has_include(<SoftwareSerial.h>)
+ #else
+-- 
+2.17.1
+

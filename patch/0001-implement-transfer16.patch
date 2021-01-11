@@ -1,0 +1,88 @@
+From 07244a7d1143b088a4c09b3d2cc775de17186ed5 Mon Sep 17 00:00:00 2001
+From: John Wass <wassj@ctc.com>
+Date: Sat, 9 Nov 2019 11:31:48 -0500
+Subject: [PATCH] implement transfer16
+
+---
+ src/source/TMC2130Stepper.cpp | 36 +++++++++++++++++++++++++----------
+ 1 file changed, 26 insertions(+), 10 deletions(-)
+
+diff --git a/src/source/TMC2130Stepper.cpp b/src/source/TMC2130Stepper.cpp
+index a23840a..b5028c6 100644
+--- a/src/source/TMC2130Stepper.cpp
++++ b/src/source/TMC2130Stepper.cpp
+@@ -4,6 +4,22 @@
+ int8_t TMC2130Stepper::chain_length = 0;
+ uint32_t TMC2130Stepper::spi_speed = 16000000/8;
+ 
++int16_t SPItransfer16(int16_t data){
++   union {
++      uint16_t val = 0;
++      struct {
++         uint8_t lsb;
++         uint8_t msb;
++      };
++   } in, out;
++
++   in.val = data;
++   out.lsb = SPI.transfer(in.lsb);
++   out.msb = SPI.transfer(in.msb);
++
++   return out.val;
++}
++
+ TMC2130Stepper::TMC2130Stepper(uint16_t pinCS, float RS, int8_t link) :
+   TMCStepper(RS),
+   _pinCS(pinCS),
+@@ -106,14 +122,14 @@ uint32_t TMC2130Stepper::read(uint8_t addressByte) {
+     SPI.beginTransaction(SPISettings(spi_speed, MSBFIRST, SPI_MODE3));
+     switchCSpin(LOW);
+     SPI.transfer(addressByte & 0xFF);
+-    SPI.transfer16(0x0000); // Clear SPI
+-    SPI.transfer16(0x0000);
++    SPItransfer16(0x0000); // Clear SPI
++    SPItransfer16(0x0000);
+     
+     // Shift the written data to the correct driver in chain
+     // Default link_index = -1 and no shifting happens
+     while(i < link_index) {
+-      SPI.transfer16(0x0000);
+-      SPI.transfer16(0x0000);
++      SPItransfer16(0x0000);
++      SPItransfer16(0x0000);
+       SPI.transfer(0x0000);
+       i++;
+     }
+@@ -123,8 +139,8 @@ uint32_t TMC2130Stepper::read(uint8_t addressByte) {
+     
+     // Shift data from target link into the last one...
+     while(i < chain_length) {
+-      SPI.transfer16(0x0000);
+-      SPI.transfer16(0x0000);
++      SPItransfer16(0x0000);
++      SPItransfer16(0x0000);
+       SPI.transfer(0x0000);
+       i++;
+     }
+@@ -166,14 +182,14 @@ void TMC2130Stepper::write(uint8_t addressByte, uint32_t config) {
+     SPI.beginTransaction(SPISettings(spi_speed, MSBFIRST, SPI_MODE3));
+     switchCSpin(LOW);
+     status_response = SPI.transfer(addressByte & 0xFF);
+-    SPI.transfer16((config>>16) & 0xFFFF);
+-    SPI.transfer16(config & 0xFFFF);
++    SPItransfer16((config>>16) & 0xFFFF);
++    SPItransfer16(config & 0xFFFF);
+     
+     // Shift the written data to the correct driver in chain
+     // Default link_index = -1 and no shifting happens
+     while(i < link_index) {
+-      SPI.transfer16(0x0000);
+-      SPI.transfer16(0x0000);
++      SPItransfer16(0x0000);
++      SPItransfer16(0x0000);
+       SPI.transfer(0x0000);
+       i++;
+     }
+-- 
+2.17.1
+
